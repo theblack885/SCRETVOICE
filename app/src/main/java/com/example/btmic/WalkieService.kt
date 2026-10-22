@@ -33,6 +33,7 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
+import okio.toByteString
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -541,7 +542,7 @@ class WalkieService : Service() {
                     bytes[i * 2] = (v and 0xFF).toByte()
                     bytes[i * 2 + 1] = ((v shr 8) and 0xFF).toByte()
                 }
-                ws.send(ByteString.of(bytes, 0, n * 2))
+                ws.send(bytes.toByteString(0, n * 2))
                 WalkieState.txLevel = ((rms / 32768.0) * 8.0).toFloat().coerceIn(0f, 1f)
             } else {
                 WalkieState.txLevel = 0f
