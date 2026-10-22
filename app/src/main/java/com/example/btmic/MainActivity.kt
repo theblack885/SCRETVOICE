@@ -99,6 +99,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         BtMicState.load(this)
         WalkieState.load(this)
+        CamState.load(this)
         enableEdgeToEdge()
         setContent {
             MaterialTheme(
@@ -157,7 +158,8 @@ fun BtMicScreen() {
                     0 -> LiveTab(btName, btCount)
                     1 -> WalkieTab(btName)
                     2 -> RecordingsTab(player)
-                    else -> HistoryTab(player)
+                    3 -> HistoryTab(player)
+                    else -> CameraTab()
                 }
             }
             BottomBar(tab) { player.stop(); tab = it }
@@ -167,7 +169,7 @@ fun BtMicScreen() {
 
 @Composable
 fun BottomBar(selected: Int, onSelect: (Int) -> Unit) {
-    val items = listOf("Live", "Walkie", "Recordings", "History")
+    val items = listOf("Live", "Walkie", "Recordings", "History", "Camera")
     Row(
         Modifier
             .fillMaxWidth()
@@ -194,7 +196,7 @@ fun BottomBar(selected: Int, onSelect: (Int) -> Unit) {
                 Text(
                     label,
                     color = if (sel) Color.White else Color.White.copy(alpha = 0.6f),
-                    fontSize = 12.sp, fontWeight = FontWeight.SemiBold
+                    fontSize = 11.sp, fontWeight = FontWeight.SemiBold
                 )
             }
         }
