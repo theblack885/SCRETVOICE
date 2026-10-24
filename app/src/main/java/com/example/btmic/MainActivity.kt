@@ -218,6 +218,7 @@ fun LiveTab(btName: String?, btCount: Int) {
     var autoStart by remember { mutableStateOf(BtMicState.autoStart) }
     var multi by remember { mutableStateOf(BtMicState.multi) }
     var gain by remember { mutableFloatStateOf(BtMicState.gain) }
+    var earbud by remember { mutableStateOf(BtMicState.earbudEnabled) }
 
     val perms = remember {
         buildList {
@@ -373,6 +374,21 @@ fun LiveTab(btName: String?, btCount: Int) {
                 sub = "Music/video apps ko pause karwata hai",
                 checked = blockOthers
             ) { blockOthers = it; BtMicState.blockOthers = it; BtMicState.save(ctx) }
+            Spacer(Modifier.height(14.dp))
+            ToggleRow(
+                title = "Earbuds button se voice recording",
+                sub = "Earbuds ka click dabake, kahin bhi, voice recording shuru-band karo",
+                checked = earbud
+            ) { on ->
+                earbud = on
+                BtMicState.earbudEnabled = on
+                BtMicState.save(ctx)
+                if (on) {
+                    ctx.startForegroundService(Intent(ctx, EarbudTriggerService::class.java))
+                } else {
+                    ctx.startService(Intent(ctx, EarbudTriggerService::class.java).setAction("STOP"))
+                }
+            }
             Spacer(Modifier.height(18.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Awaaz badhao", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
