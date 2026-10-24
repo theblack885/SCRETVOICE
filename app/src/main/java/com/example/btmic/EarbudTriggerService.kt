@@ -38,7 +38,7 @@ class EarbudTriggerService : Service() {
         )
         val notification = Notification.Builder(this, channelId)
             .setContentTitle("Earbud shortcut chalu hai")
-            .setContentText("Earbuds ka button dabake camera recording shuru/band karo")
+            .setContentText("Earbuds ka button dabake voice recording shuru-band karo")
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .setOngoing(true)
             .build()
@@ -65,7 +65,7 @@ class EarbudTriggerService : Service() {
                     when (event.keyCode) {
                         KeyEvent.KEYCODE_HEADSETHOOK,
                         KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
-                            toggleCameraRecording()
+                            toggleVoiceRecording()
                             return true
                         }
                     }
@@ -77,19 +77,19 @@ class EarbudTriggerService : Service() {
         mediaSession = session
     }
 
-    private fun toggleCameraRecording() {
-        if (CamState.running) {
-            startService(Intent(this, CameraService::class.java).setAction("STOP"))
+    private fun toggleVoiceRecording() {
+        if (QuickRecordState.running) {
+            startService(Intent(this, QuickRecordService::class.java).setAction("STOP"))
             return
         }
-        val missing = neededCameraPermissions().filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-        if (missing.isNotEmpty()) return
+        val missing = ContextCompat.checkSelfPermission(
+            this, android.Manifest.permission.RECORD_AUDIO
+        ) != PackageManager.PERMISSION_GRANTED
+        if (missing) return
         if (Build.VERSION.SDK_INT >= 26) {
-            startForegroundService(Intent(this, CameraService::class.java).setAction("START"))
+            startForegroundService(Intent(this, QuickRecordService::class.java).setAction("START"))
         } else {
-            startService(Intent(this, CameraService::class.java).setAction("START"))
+            startService(Intent(this, QuickRecordService::class.java).setAction("START"))
         }
     }
 
