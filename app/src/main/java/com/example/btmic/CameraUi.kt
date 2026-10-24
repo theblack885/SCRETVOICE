@@ -58,16 +58,17 @@ fun neededCameraPermissions(): Array<String> = arrayOf(
     android.Manifest.permission.RECORD_AUDIO
 )
 
+fun currentTimePin(): String =
+    SimpleDateFormat("HHmm", Locale.US).format(Date())
+
 @Composable
 fun CameraTab() {
     val ctx = LocalContext.current
     var running by remember { mutableStateOf(CamState.running) }
-    var unlocked by remember { mutableStateOf(CamState.pin.isBlank()) }
+    var unlocked by remember { mutableStateOf(false) }
     var pinInput by remember { mutableStateOf("") }
     var files by remember { mutableStateOf(listOf<File>()) }
     var tick by remember { mutableIntStateOf(0) }
-    var settingPin by remember { mutableStateOf(false) }
-    var newPin by remember { mutableStateOf("") }
 
     LaunchedEffect(tick) { files = CamStore.list(ctx) }
     LaunchedEffect(Unit) {
@@ -150,11 +151,12 @@ fun CameraTab() {
 
         if (!unlocked) {
             Glass {
-                Text("Videos dekhne ke liye PIN daalo", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                Text("Videos dekhne ke liye abhi ka time PIN ke roop me daalo", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                Text("Jaise abhi time 11:29 hai to PIN '1129' daalo", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
                 Spacer(Modifier.height(10.dp))
                 OutlinedTextField(
                     value = pinInput,
-                    onValueChange = { pinInput = it.filter { c -> c.isDigit() }.take(6) },
+                    onValueChange = { pinInput = it.filter { c -> c.isDigit() }.take(4) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
@@ -169,7 +171,7 @@ fun CameraTab() {
                 )
                 Spacer(Modifier.height(10.dp))
                 TextButton(onClick = {
-                    if (pinInput == CamState.pin) {
+                    if (pinInput == currentTimePin()) {
                         unlocked = true
                     } else {
                         Toast.makeText(ctx, "Galat PIN", Toast.LENGTH_SHORT).show()
@@ -178,55 +180,7 @@ fun CameraTab() {
                 }) { Text("Unlock", color = Cyan, fontWeight = FontWeight.Bold) }
             }
         } else {
-            Glass {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        if (CamState.pin.isBlank()) "Koi PIN set nahi hai" else "PIN laga hua hai",
-                        color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.weight(1f)
-                    )
-                    TextButton(onClick = { settingPin = true }) {
-                        Text(if (CamState.pin.isBlank()) "PIN lagao" else "PIN badlo", color = Cyan, fontWeight = FontWeight.Bold)
-                    }
-                }
-                if (settingPin) {
-                    Spacer(Modifier.height(10.dp))
-                    OutlinedTextField(
-                        value = newPin,
-                        onValueChange = { newPin = it.filter { c -> c.isDigit() }.take(6) },
-                        label = { Text("Naya 4-6 digit PIN") },
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedBorderColor = Cyan,
-                            unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
-                            cursorColor = Cyan
-                        )
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Row {
-                        TextButton(onClick = {
-                            if (newPin.length in 4..6) {
-                                CamState.pin = newPin
-                                CamState.save(ctx)
-                                newPin = ""
-                                settingPin = false
-                                Toast.makeText(ctx, "PIN save ho gaya", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(ctx, "4-6 digit ka PIN daalo", Toast.LENGTH_SHORT).show()
-                            }
-                        }) { Text("Save", color = Green, fontWeight = FontWeight.Bold) }
-                        TextButton(onClick = { settingPin = false; newPin = "" }) {
-                            Text("Cancel", color = Color.White.copy(alpha = 0.6f))
-                        }
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(4.dp))
             Text(
                 "${files.size} video",
                 color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, modifier = Modifier.fillMaxWidth()
