@@ -59,7 +59,7 @@ fun neededCameraPermissions(): Array<String> = arrayOf(
 )
 
 fun currentTimePin(): String =
-    SimpleDateFormat("HHmm", Locale.US).format(Date())
+    SimpleDateFormat("hmm", Locale.US).format(Date())
 
 @Composable
 fun CameraTab() {
@@ -149,27 +149,9 @@ fun CameraTab() {
 
         Spacer(Modifier.height(16.dp))
 
-        Glass {
-            ToggleRow(
-                title = "Earbuds button se recording",
-                sub = "Earbuds ka click/button dabake camera recording shuru-band karo",
-                checked = CamState.earbudEnabled
-            ) { on ->
-                CamState.earbudEnabled = on
-                CamState.save(ctx)
-                if (on) {
-                    ctx.startForegroundService(Intent(ctx, EarbudTriggerService::class.java))
-                } else {
-                    ctx.startService(Intent(ctx, EarbudTriggerService::class.java).setAction("STOP"))
-                }
-            }
-        }
-        Spacer(Modifier.height(14.dp))
-
         if (!unlocked) {
             Glass {
-                Text("Videos dekhne ke liye abhi ka time PIN ke roop me daalo", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                Text("Jaise abhi time 11:29 hai to PIN '1129' daalo", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
+                Text("PIN daalo", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(10.dp))
                 OutlinedTextField(
                     value = pinInput,
