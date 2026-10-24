@@ -15,6 +15,7 @@ object BtMicState {
     @Volatile var autoRecord = true
     @Volatile var autoStart = true
     @Volatile var multi = true
+    @Volatile var earbudEnabled = false
 
     fun load(ctx: Context) {
         val p = ctx.getSharedPreferences("btmic", Context.MODE_PRIVATE)
@@ -24,6 +25,7 @@ object BtMicState {
         autoRecord = p.getBoolean("autoRecord", true)
         autoStart = p.getBoolean("autoStart", true)
         multi = p.getBoolean("multi", true)
+        earbudEnabled = p.getBoolean("earbud_trigger", false)
     }
 
     fun save(ctx: Context) {
@@ -34,6 +36,7 @@ object BtMicState {
             .putBoolean("autoRecord", autoRecord)
             .putBoolean("autoStart", autoStart)
             .putBoolean("multi", multi)
+            .putBoolean("earbud_trigger", earbudEnabled)
             .apply()
     }
 }
