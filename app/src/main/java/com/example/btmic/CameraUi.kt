@@ -176,4 +176,89 @@ fun CameraTab() {
                     onValueChange = { pinInput = it.filter { c -> c.isDigit() }.take(4) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = Keyboard
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = Cyan,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                        cursorColor = Cyan
+                    )
+                )
+                Spacer(Modifier.height(10.dp))
+                TextButton(onClick = {
+                    if (pinInput == currentTimePin()) {
+                        unlocked = true
+                    } else {
+                        Toast.makeText(ctx, "Galat PIN", Toast.LENGTH_SHORT).show()
+                    }
+                    pinInput = ""
+                }) { Text("Unlock", color = Cyan, fontWeight = FontWeight.Bold) }
+            }
+        } else {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "${files.size} video",
+                color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(8.dp))
+
+            if (files.isEmpty()) {
+                Glass { Text("Abhi koi video nahi hai.", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp) }
+            } else {
+                LazyColumn(Modifier.weight(1f)) {
+                    items(files, key = { it.path }) { f ->
+                        VideoItem(f, onPlay = {
+                            try {
+                                val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", f)
+                                val intent = Intent(Intent.ACTION_VIEW).apply {
+                                    setDataAndType(uri, "video/mp4")
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                ctx.startActivity(intent)
+                            } catch (e: Exception) {
+                                Toast.makeText(ctx, "Video nahi khul payi", Toast.LENGTH_SHORT).show()
+                            }
+                        }, onDelete = {
+                            f.delete()
+                            tick++
+                        })
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+fun VideoItem(file: File, onPlay: () -> Unit, onDelete: () -> Unit) {
+    val fmt = remember { SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()) }
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White.copy(alpha = 0.06f))
+            .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(24.dp))
+            .padding(14.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier.size(48.dp).clip(CircleShape)
+                    .background(Brush.linearGradient(listOf(Cyan, Violet)))
+                    .clickable(onClick = onPlay),
+                contentAlignment = Alignment.Center
+            ) { Text("▶", color = Color.White, fontSize = 18.sp) }
+            Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                Text(fmt.format(Date(file.lastModified())), color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                Text(RecStore.sizeText(file.length()), color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            TextButton(onClick = onDelete) { Text("Delete", color = Rose, fontWeight = FontWeight.Bold) }
+        }
+    }
+}
