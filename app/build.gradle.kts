@@ -46,4 +46,5 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.3.4")
     implementation("androidx.camera:camera-video:1.3.4")
     implementation("androidx.lifecycle:lifecycle-service:2.8.3")
+    implementation("androidx.media:media:1.7.0")
 }
