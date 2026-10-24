@@ -4,16 +4,12 @@ import android.content.Context
 
 object CamState {
     @Volatile var running = false
-    @Volatile var pin = ""
 
     fun load(ctx: Context) {
-        val p = ctx.getSharedPreferences("btmic", Context.MODE_PRIVATE)
-        pin = p.getString("cam_pin", "") ?: ""
+        // ab koi stored PIN nahi hai, time hi PIN hai
     }
 
     fun save(ctx: Context) {
-        ctx.getSharedPreferences("btmic", Context.MODE_PRIVATE).edit()
-            .putString("cam_pin", pin)
-            .apply()
+        // kuch save karne ki zaroorat nahi
     }
 }
