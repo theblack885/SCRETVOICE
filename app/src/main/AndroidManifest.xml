@@ -47,6 +47,11 @@
             android:foregroundServiceType="camera" />
 
         <service
+            android:name=".QuickRecordService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
+
+        <service
             android:name=".EarbudTriggerService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
