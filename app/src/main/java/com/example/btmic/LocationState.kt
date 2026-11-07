@@ -4,7 +4,7 @@ import android.content.Context
 
 object LocationState {
     @Volatile var sharing = false
-    @Volatile var room = "1234"
+    @Volatile var room = "4444"
     @Volatile var serverHost = "traker-mi1p.onrender.com"
 
     fun load(ctx: Context) {
