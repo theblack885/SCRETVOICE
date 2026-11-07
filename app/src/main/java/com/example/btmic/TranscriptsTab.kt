@@ -32,7 +32,7 @@ fun TranscriptsTab() {
     var tick by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(tick) {
-        files = RecStore.list(ctx)
+        files = RecStore.list(RecStore.dir(ctx))
     }
 
     Column(Modifier.fillMaxSize().padding(horizontal = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -110,10 +110,15 @@ fun TranscriptItem(file: File) {
 
 @Composable
 fun LangChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val bgModifier = if (selected)
+        Modifier.background(Brush.linearGradient(listOf(Cyan, Violet)), RoundedCornerShape(16.dp))
+    else
+        Modifier.background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+
     Box(
         Modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(if (selected) Brush.linearGradient(listOf(Cyan, Violet)) else Color.White.copy(alpha = 0.08f))
+            .then(bgModifier)
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 6.dp)
     ) {
