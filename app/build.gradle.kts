@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.btmic"
         minSdk = 26
         targetSdk = 34
-        versionCode = 8
-        versionName = "8.0"
+        versionCode = 9
+        versionName = "9.0"
     }
 
     compileOptions {
@@ -27,6 +27,11 @@ android {
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
+    }
+    packaging {
+        resources {
+            excludes += "META-INF/*"
+        }
     }
 }
 
@@ -47,4 +52,9 @@ dependencies {
     implementation("androidx.camera:camera-video:1.3.4")
     implementation("androidx.lifecycle:lifecycle-service:2.8.3")
     implementation("androidx.media:media:1.7.0")
+
+    implementation("com.alphacephei:vosk-android:0.3.47")
+    implementation("net.java.dev.jna:jna:5.13.0@aar")
+
+    implementation("org.nanohttpd:nanohttpd:2.3.1")
 }
