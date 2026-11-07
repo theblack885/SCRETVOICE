@@ -432,6 +432,10 @@ fun LocationMap(room: String) {
                 factory = { c ->
                     WebView(c).apply {
                         settings.javaScriptEnabled = true
+                        settings.domStorageEnabled = true
+                        settings.loadWithOverviewMode = true
+                        settings.useWideViewPort = true
+                        settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                         loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
                     }
                 }
