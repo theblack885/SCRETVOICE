@@ -161,7 +161,8 @@ fun BtMicScreen() {
                     2 -> RecordingsTab(player)
                     3 -> HistoryTab(player)
                     4 -> CameraTab()
-                    else -> LocationTab()
+                    5 -> LocationTab()
+                    else -> TranscriptsTab()
                 }
             }
             BottomBar(tab) { player.stop(); tab = it }
@@ -171,7 +172,7 @@ fun BtMicScreen() {
 
 @Composable
 fun BottomBar(selected: Int, onSelect: (Int) -> Unit) {
-    val items = listOf("Live", "Walkie", "Recordings", "History", "Camera", "Location")
+    val items = listOf("Live", "Walkie", "Recordings", "History", "Camera", "Location", "Text")
     Row(
         Modifier
             .fillMaxWidth()
