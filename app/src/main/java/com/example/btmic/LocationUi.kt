@@ -29,13 +29,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -320,7 +314,23 @@ fun PinIcon(modifier: Modifier, color: Color) {
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun LocationMap(room: String) {
+    val ctx = LocalContext.current
+    var offlineMode by remember { mutableStateOf(false) }
+    var offlineReady by remember { mutableStateOf(false) }
+
+    LaunchedEffect(offlineMode) {
+        if (offlineMode) {
+            OfflineTileServer.start(ctx)
+            offlineReady = OfflineTileServer.ready
+        }
+    }
+
     val base = "https://$SERVER_HOST"
+    val tileUrl = if (offlineMode && offlineReady)
+        "http://127.0.0.1:8744/{z}/{x}/{y}.png"
+    else
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+
     val html = """
         <!DOCTYPE html>
         <html><head>
@@ -332,24 +342,17 @@ fun LocationMap(room: String) {
           #map{height:100%;width:100%;filter:invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9) saturate(0.9)}
           #card{
             position:absolute;left:14px;right:14px;bottom:14px;
-            background:rgba(19,15,43,0.85);
-            backdrop-filter:blur(14px);
-            -webkit-backdrop-filter:blur(14px);
-            border:1px solid rgba(255,255,255,0.12);
-            border-radius:22px;
-            padding:16px 18px;
-            color:#fff;
-            box-shadow:0 10px 30px rgba(0,0,0,0.4);
-            display:none;
+            background:rgba(19,15,43,0.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+            border:1px solid rgba(255,255,255,0.12);border-radius:22px;padding:16px 18px;color:#fff;
+            box-shadow:0 10px 30px rgba(0,0,0,0.4);display:none;
           }
           #status{display:flex;align-items:center;gap:8px;margin-bottom:8px}
           #dot{width:9px;height:9px;border-radius:50%;background:#34E39B;box-shadow:0 0 10px #34E39B;animation:blink 1.6s infinite}
           @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
           #addr{font-size:14.5px;line-height:1.4;font-weight:600}
-          #coords{font-size:12.5px;color:#4FD1FF;margin-top:8px;font-weight:600;letter-spacing:0.2px}
+          #coords{font-size:12.5px;color:#4FD1FF;margin-top:8px;font-weight:600}
           #time{font-size:11.5px;color:rgba(255,255,255,0.45);margin-top:5px}
           .leaflet-control-attribution{font-size:9px;background:rgba(7,7,18,0.6)!important;color:#888!important}
-          .leaflet-control-attribution a{color:#4FD1FF!important}
           .leaflet-control-zoom a{background:rgba(19,15,43,0.85)!important;color:#fff!important;border:1px solid rgba(255,255,255,0.12)!important}
         </style>
         </head><body>
@@ -362,18 +365,14 @@ fun LocationMap(room: String) {
         </div>
         <script>
         var map = L.map('map', {zoomControl:true, attributionControl:true}).setView([20.5937,78.9629], 4);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            subdomains: 'abc', maxZoom: 19
-        }).addTo(map);
+        L.tileLayer('$tileUrl', { attribution: 'Map data', subdomains: 'abc', maxZoom: 19 }).addTo(map);
 
         var pulseIcon = L.divIcon({
             className: '',
             html: '<div style="width:18px;height:18px;border-radius:50%;background:#4FD1FF;border:3px solid #fff;box-shadow:0 0 16px #4FD1FF"></div>',
             iconSize: [18,18], iconAnchor: [9,9]
         });
-        var marker = null;
-        var lastKey = "";
+        var marker = null, lastKey = "";
 
         function reverseGeocode(lat, lng) {
             var key = lat.toFixed(4) + "," + lng.toFixed(4);
@@ -381,11 +380,8 @@ fun LocationMap(room: String) {
             lastKey = key;
             fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
                 .then(function(r){ return r.json(); })
-                .then(function(d){
-                    document.getElementById('addr').innerText = d.display_name || "Pata nahi mil paya";
-                }).catch(function(){
-                    document.getElementById('addr').innerText = "Pata load nahi ho paya";
-                });
+                .then(function(d){ document.getElementById('addr').innerText = d.display_name || "Pata nahi mil paya"; })
+                .catch(function(){ document.getElementById('addr').innerText = "Pata load nahi ho paya"; });
         }
 
         function poll() {
@@ -393,17 +389,11 @@ fun LocationMap(room: String) {
                 if (d && d.lat) {
                     document.getElementById('card').style.display = 'block';
                     var pos = [d.lat, d.lng];
-                    if (!marker) {
-                        marker = L.marker(pos, {icon: pulseIcon}).addTo(map);
-                        map.setView(pos, 16);
-                    } else {
-                        marker.setLatLng(pos);
-                    }
+                    if (!marker) { marker = L.marker(pos, {icon: pulseIcon}).addTo(map); map.setView(pos, 16); }
+                    else { marker.setLatLng(pos); }
                     reverseGeocode(d.lat, d.lng);
-                    document.getElementById('coords').innerText =
-                        "GPS  " + d.lat.toFixed(6) + ", " + d.lng.toFixed(6);
-                    var dt = new Date(d.time);
-                    document.getElementById('time').innerText = "Last update " + dt.toLocaleTimeString();
+                    document.getElementById('coords').innerText = "GPS  " + d.lat.toFixed(6) + ", " + d.lng.toFixed(6);
+                    document.getElementById('time').innerText = "Last update " + new Date(d.time).toLocaleTimeString();
                 }
             }).catch(function(){});
         }
@@ -413,21 +403,39 @@ fun LocationMap(room: String) {
         </body></html>
     """.trimIndent()
 
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(520.dp)
-            .clip(RoundedCornerShape(28.dp))
-            .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(28.dp))
-    ) {
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { c ->
-                WebView(c).apply {
-                    settings.javaScriptEnabled = true
-                    loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
-                }
+    Column {
+        Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.End) {
+            Box(
+                Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (offlineMode) Green.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.08f))
+                    .clickable { offlineMode = !offlineMode }
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    if (offlineMode) "Offline Map ON" else "Offline Map OFF",
+                    color = if (offlineMode) Green else Color.White.copy(alpha = 0.6f),
+                    fontSize = 12.sp, fontWeight = FontWeight.Bold
+                )
             }
-        )
+        }
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(500.dp)
+                .clip(RoundedCornerShape(28.dp))
+                .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(28.dp))
+        ) {
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                update = { it.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null) },
+                factory = { c ->
+                    WebView(c).apply {
+                        settings.javaScriptEnabled = true
+                        loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
+                    }
+                }
+            )
+        }
     }
 }
