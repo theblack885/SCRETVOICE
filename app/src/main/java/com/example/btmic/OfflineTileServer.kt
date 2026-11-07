@@ -30,14 +30,14 @@ class OfflineTileServer(private val ctx: Context, port: Int) : NanoHTTPD(port) {
     }
 
     override fun serve(session: IHTTPSession): Response {
-        val uri = session.uri.trim('/').split("/")
-        if (uri.size != 3) return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "bad request")
+        val parts = session.uri.trim('/').split("/")
+        if (parts.size != 3) return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "bad request")
 
         return try {
-            val z = uri[0].toInt()
-            val x = uri[1].toInt()
-            val yRaw = uri[2].removeSuffix(".png").toInt()
-            val y = (1 shl z) - 1 - yRaw // MBTiles TMS flip
+            val z = parts[0].toInt()
+            val x = parts[1].toInt()
+            val yRaw = parts[2].removeSuffix(".png").toInt()
+            val y = (1 shl z) - 1 - yRaw
 
             val cursor = db?.rawQuery(
                 "SELECT tile_data FROM tiles WHERE zoom_level=? AND tile_column=? AND tile_row=?",
