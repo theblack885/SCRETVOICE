@@ -9,7 +9,7 @@ object LocationState {
 
     fun load(ctx: Context) {
         val p = ctx.getSharedPreferences("btmic", Context.MODE_PRIVATE)
-        room = p.getString("loc_room", "1234") ?: "1234"
+        room = p.getString("loc_room",4444 "") ?: "4444"
         serverHost = "traker-mi1p.onrender.com"
     }
 
